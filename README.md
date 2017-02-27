@@ -1,5 +1,5 @@
 # Streaming-DMD
-Python class for to perform Dynamic Mode Decompoaition of streaming data sets.
+Python class to perform Dynamic Mode Decomposition of streaming data sets.
 
 This is a translation of the Matlab class provided in the supplementary material of:
 
