@@ -8,8 +8,8 @@ Physics of Fluids 26, 111701 (2014).
 
 # To Do
 
-. Add files for simple streaming DMD example
-. Code profiling and optimisation
+* Add files for simple streaming DMD example
+* Code profiling and optimisation
 
 
 
