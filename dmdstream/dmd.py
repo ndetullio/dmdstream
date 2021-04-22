@@ -1,6 +1,8 @@
 import numpy as np
 import numpy.linalg as la
 
+from typing import Tuple
+
 class StreamingDMD:
     
     """
@@ -10,7 +12,13 @@ class StreamingDMD:
     Physics of Fluids 26, 111701 (2014). 
     """
 
-    def __init__(self, max_rank=0):
+    def __init__(self, max_rank: int =0):
+        '''
+        Performing Dynamic Mode Decomposition using streaming data.
+
+        Args:
+            max_rank: int maximum allowed rank for the linear operator matrix.
+        '''
 
         self.max_rank = max_rank
         self.NGRAM = 5 # Number of Gram_Schmidt iterations
@@ -21,7 +29,14 @@ class StreamingDMD:
         self.Gx = 0
         self.Gy = 0
 
-    def preprocess(self, x, y):
+    def preprocess(self, x: np.ndarray, y: np.ndarray):
+        '''
+        Preprocessing step.
+
+        Args:
+            x: numpy.ndarray containing the system's state at step i-1
+            y: numpy.ndarray containing the system's state at step i
+        '''
         
         # Construct bases
         normx = la.norm(x)
@@ -35,7 +50,14 @@ class StreamingDMD:
         self.A = np.zeros([1,1]) + normx * normy
 
 
-    def update(self, x, y):
+    def update(self, x: np.ndarray, y: np.ndarray):
+        '''
+        Updating step.
+
+        Args:
+            x: numpy.ndarray containing the system's state at step i-1
+            y: numpy.ndarray containing the system's state at step i
+        '''
 
         normx = la.norm(x)
         normy = la.norm(y)     
@@ -43,8 +65,6 @@ class StreamingDMD:
 #"       ------- STEP 1 --------       "
         xtilde = np.zeros(shape=(self.Qx.shape[1],1))
         ytilde = np.zeros(shape=(self.Qy.shape[1],1))
-        # xtilde = 0
-        # ytilde = 0
         ex = x
         ey = y
         for _ in range(self.NGRAM):
@@ -60,6 +80,7 @@ class StreamingDMD:
         if la.norm(ex) / normx > self.EPSILON:
 #           Update basis for x
             self.Qx = np.hstack([self.Qx,ex/la.norm(ex)])
+
 #           Increase size of Gx and A by zero-padding
             self.Gx = np.hstack([self.Gx,np.zeros([self.Gx.shape[0],1])])
             self.Gx = np.vstack([self.Gx,np.zeros([1,self.Gx.shape[1]])])
@@ -68,6 +89,7 @@ class StreamingDMD:
         if la.norm(ey) /normy > self.EPSILON:
 #           Update basis for y
             self.Qy = np.hstack([self.Qy,ey/la.norm(ey)])
+
 #           Increase size of Gy and A by zero-padding
             self.Gy = np.hstack([self.Gy,np.zeros([self.Gy.shape[0],1])])
             self.Gy = np.vstack([self.Gy,np.zeros([1,self.Gy.shape[1]])])
@@ -86,7 +108,7 @@ class StreamingDMD:
                 self.A = self.A.dot(qx)
                 self.Gx = np.diag(eigval[:r0])
                 
-            if self.Qy.shape[0] > r0:
+            if self.Qy.shape[1] > r0:
                 eigval, eigvec = la.eig(self.Gy)
                 indx = np.argsort(-eigval) # get indices for sorting in descending order
                 eigval = -np.sort(-eigval) # sort in descending order
@@ -105,16 +127,20 @@ class StreamingDMD:
         self.Gy = self.Gy + ytilde.dot(np.transpose(ytilde))
                 
                 
-    def compute_modes(self):
+    def compute_modes(self) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """ 
-        Compute DMD modes and eigenvalues
-        M, lam = StreamingDMD.compute_modes produces a vector lam of DMD 
-        eigenvalues, and a matrix M whose columns are the DMD modes of the
-        data set 
+        Compute DMD modes and eigenvalues.
+
+        This method should only be called after running the preprocessind and
+        update steps.
+
+        Returns:
+            modes: numpy.ndarray with the learned Ritz vectors.
+            eigvals: numpy.ndarray with the learned Ritz values.
         """
         
         Ktilde = np.transpose(self.Qx).dot(self.Qy).dot(self.A).dot(la.pinv(self.Gx))
-        eigvals,eigvecK = la.eig(Ktilde)
+        eigvals, eigvecK = la.eig(Ktilde)
         modes = self.Qx.dot(eigvecK)
         
         return modes, eigvals
