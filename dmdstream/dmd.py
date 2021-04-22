@@ -127,7 +127,7 @@ class StreamingDMD:
         self.Gy = self.Gy + ytilde.dot(np.transpose(ytilde))
                 
                 
-    def compute_modes(self) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def compute_modes(self) -> Tuple[np.ndarray, np.ndarray]:
         """ 
         Compute DMD modes and eigenvalues.
 
